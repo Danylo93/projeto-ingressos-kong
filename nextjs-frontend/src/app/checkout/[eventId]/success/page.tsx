@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { Title } from "../../../../components/Title";
 import { EventModel } from "../../../../models";
+import { clearSpotsAction } from "../../../../actions";
 // queries
 export async function getEvent(eventId: string): Promise<EventModel> {
   const response = await fetch(`${process.env.GOLANG_API_URL}/events/${eventId}`, {
@@ -24,6 +25,7 @@ export default async function CheckoutSuccessPage({
   const event = await getEvent(params.eventId);
   const cookiesStore = cookies();
   const selectedSpots = JSON.parse(cookiesStore.get("spots")?.value || "[]");
+  await clearSpotsAction();
   return (
     <main className="mt-10 flex flex-col flex-wrap items-center ">
       <Title>Compra realizada com sucesso!</Title>

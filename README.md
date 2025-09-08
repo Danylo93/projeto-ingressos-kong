@@ -1,25 +1,36 @@
-# Imersão Fullcycle 18 - Sistema de Venda de Ingressos
+# Conferência da Zona Leste - Sistema de Venda de Ingressos
 
 ![Imersão Full Stack && Full Cycle](https://events-fullcycle.s3.amazonaws.com/events-fullcycle/static/site/img/grupo_4417.png)
 
-Participe gratuitamente: https://imersao.fullcycle.com.br/
+Aplicação de exemplo para gestão de ingressos de eventos de igrejas. Evento de demonstração: **Conferência da Zona Leste** organizado pela **Igreja Itaquera**.
 
 ## Rodar a aplicação
 
-Dentro da pasta `imersao18` rode o comando:
+1. Clone este repositório e entre na pasta:
 
-`docker compose up`
+   ```bash
+   git clone <repo>
+   cd projeto-ingressos-kong
+   ```
 
-Então siga os passos em cada `README.md` a seguir:
+2. Levante os serviços com Docker:
 
-- [Kong API Gateway](./kong-api-gateway/README.md)
-- [Nest.JS](./nestjs-partners-api/README.md)
-- [Golang](./golang/README.md)
-- [Next.JS](./nextjs-frontend/README.md)
+   ```bash
+   docker compose up
+   ```
+
+3. Acesse cada serviço conforme necessário (veja os READMEs específicos):
+
+   - [Kong API Gateway](./kong-api-gateway/README.md)
+   - [Nest.JS](./nestjs-partners-api/README.md)
+   - [Golang](./golang/README.md)
+   - [Next.JS](./nextjs-frontend/README.md)
+
+O frontend requer as variáveis de ambiente `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_APP_URL`, `GOLANG_API_URL` e `GOLANG_API_TOKEN`. Consulte o README da pasta `nextjs-frontend` para detalhes. Para comprar ingressos é necessário cadastrar-se e fazer login; somente usuários autenticados conseguem selecionar assentos. Após o login, os dados do usuário aparecem no cabeçalho e os assentos escolhidos com o valor total aparecem no rodapé da página.
 
 ---
 
-Estamos utilizando uma opção nova do `Docker: include`, com ela ao rodarmos: `docker compose up` na raiz do repositório todos os `docker-compose.yaml` das pastas subsequentes serão rodados, ficando apenas para que você entre em cada container para instalar as depêndencias rodar os comandos de inicialização da aplicação. 
+Estamos utilizando uma opção do `Docker: include`; ao rodarmos `docker compose up` na raiz do repositório todos os `docker-compose.yaml` das pastas subsequentes serão executados.
 
 
 

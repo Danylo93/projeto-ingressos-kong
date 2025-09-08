@@ -21,9 +21,11 @@ export async function getEvent(eventId: string): Promise<EventModel> {
 export default async function CheckoutPage() {
   const cookiesStore = cookies();
   const eventId = cookiesStore.get("eventId")?.value;
-  if (!eventId) {
-    return redirect("/");
+  const userCookie = cookiesStore.get("user")?.value;
+  if (!eventId || !userCookie) {
+    return redirect(userCookie ? "/" : "/login");
   }
+  const user = JSON.parse(userCookie);
   const event = await getEvent(eventId);
   const selectedSpots = JSON.parse(cookiesStore.get("spots")?.value || "[]");
   let totalPrice = selectedSpots.length * event.price;
@@ -56,56 +58,7 @@ export default async function CheckoutPage() {
       <div className="w-full max-w-[650px] rounded-2xl bg-secondary p-4">
         <Title>Informações de pagamento</Title>
         <CheckoutForm className="mt-6 flex flex-col gap-y-3">
-          <div className="flex flex-col">
-            <label htmlFor="titular">E-mail</label>
-            <input
-              type="email"
-              name="email"
-              className="mt-2 border-solid rounded p-2 h-10 bg-input"
-              defaultValue={"test@test.com"}
-            />
-          </div>
-          <div className="flex flex-col">
-            <label htmlFor="titular">Nome no cartão</label>
-            <input
-              type="text"
-              name="card_name"
-              className="mt-2 border-solid rounded p-2 h-10 bg-input"
-              defaultValue={"Teste Teste"}
-            />
-          </div>
-          <div className="flex flex-col">
-            <label htmlFor="cc">Numero do cartão</label>
-            <input
-              type="card_number"
-              name="cc"
-              className="mt-2 border-solid rounded p-2 h-10 bg-input"
-              defaultValue={"4111111111111111"}
-            />
-          </div>
-          <div className="flex flex-wrap sm:justify-between">
-            <div className="flex w-full flex-col md:w-auto">
-              <label htmlFor="expire">Vencimento</label>
-              <input
-                type="text"
-                name="expire_date"
-                className="mt-2 sm:w-[240px] border-solid rounded p-2 h-10 bg-input"
-                defaultValue={"12/2024"}
-              />
-            </div>
-            <div className="flex w-full flex-col md:w-auto">
-              <label htmlFor="cvv">CVV</label>
-              <input
-                type="text"
-                name="cvv"
-                className="mt-2 sm:w-[240px] border-solid rounded p-2 h-10 bg-input"
-                defaultValue={"123"}
-              />
-            </div>
-          </div>
-          <button className="rounded-lg bg-btn-primary py-4 px-4 text-sm font-semibold uppercase text-btn-primary">
-            Finalizar pagamento
-          </button>
+          <input type="hidden" name="email" value={user.email} />
         </CheckoutForm>
       </div>
     </main>
