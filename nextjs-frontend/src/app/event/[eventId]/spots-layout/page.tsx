@@ -5,7 +5,7 @@ import { SpotSeat } from "../../../../components/SpotSeat";
 import { TicketKindSelect } from "./TicketKindSelect";
 import { cookies } from "next/headers";
 import { EventImage } from "../../../../components/EventImage";
-import { fetchApiJson } from "../../../../lib/api";
+import { fetchJson } from "../../../../lib/api";
 import { Fragment } from "react";
 
 export const dynamic = "force-dynamic";
@@ -15,15 +15,10 @@ async function getSpots(eventId: string): Promise<{
   spots: SpotModel[];
 }> {
   try {
-    return await fetchApiJson<{
-      event: EventModel;
-      spots: SpotModel[];
-    }>(`/events/${eventId}/spots`, {
-      cache: "no-store",
-      next: {
-        tags: [`events/${eventId}`],
-      },
-    });
+    return await fetchJson<{ event: EventModel; spots: SpotModel[] }>(
+      `${process.env.NEXT_PUBLIC_APP_URL || ""}/api/event/${eventId}/spots`,
+      { cache: "no-store" }
+    );
   } catch (err) {
     console.error("Failed to load spots", err);
     return { event: {} as EventModel, spots: [] };
@@ -103,32 +98,36 @@ export default async function SpotsLayoutPage({
             Palco
           </div>
           <div className="overflow-auto md:w-full md:justify-normal">
-            {spotRows.map((row, rowIndex) => (
-              <div
-                key={rowIndex}
-                className="flex flex-row items-center gap-3 mb-2"
-              >
-                <div className="w-6 text-center">{rowIndex + 1}</div>
-                <div className="ml-2 flex flex-row">
-                  {row.map((spot, idx) => (
-                    <Fragment key={spot.name}>
-                      {idx === seatsPerRow / 2 && (
-                        <div className="mx-1 h-6 w-6 rounded-sm bg-bar" />
-                      )}
-                      <SpotSeat
-                        spotId={spot.name}
-                        spotLabel={spot.name.slice(1)}
-                        eventId={event.id}
-                        selected={selectedSpotNames.includes(spot.name)}
-                        disabled={spot.status === "sold" || !isLogged}
-                        spotType={spot.type}
-                        price={spot.price}
-                      />
-                    </Fragment>
-                  ))}
+            {spotRows.length > 0 ? (
+              spotRows.map((row, rowIndex) => (
+                <div
+                  key={rowIndex}
+                  className="flex flex-row items-center gap-3 mb-2"
+                >
+                  <div className="w-6 text-center">{rowIndex + 1}</div>
+                  <div className="ml-2 flex flex-row">
+                    {row.map((spot, idx) => (
+                      <Fragment key={spot.name}>
+                        {idx === seatsPerRow / 2 && (
+                          <div className="mx-1 h-6 w-6 rounded-sm bg-bar" />
+                        )}
+                        <SpotSeat
+                          spotId={spot.name}
+                          spotLabel={spot.name.slice(1)}
+                          eventId={event.id}
+                          selected={selectedSpotNames.includes(spot.name)}
+                          disabled={spot.status === "sold" || !isLogged}
+                          spotType={spot.type}
+                          price={spot.price}
+                        />
+                      </Fragment>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-center py-4">Nenhum assento disponível.</p>
+            )}
           </div>
           <div className="flex w-full flex-row justify-around">
             <div className=" flex flex-row items-center">
