@@ -28,6 +28,8 @@ Aplicação de exemplo para gestão de ingressos de eventos de igrejas. Evento d
 
 O frontend requer as variáveis de ambiente `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_APP_URL`, `GOLANG_API_URL` e `GOLANG_API_TOKEN`. Consulte o README da pasta `nextjs-frontend` para detalhes. Para comprar ingressos é necessário cadastrar-se e fazer login; somente usuários autenticados conseguem selecionar assentos. Após o login, os dados do usuário aparecem no cabeçalho e os assentos escolhidos com o valor total aparecem no rodapé da página.
 
+Os pagamentos são processados pela Stripe e, ao concluir a compra, a API em Go registra os assentos como vendidos sem uso de dados mockados.
+
 ---
 
 Estamos utilizando uma opção do `Docker: include`; ao rodarmos `docker compose up` na raiz do repositório todos os `docker-compose.yaml` das pastas subsequentes serão executados.

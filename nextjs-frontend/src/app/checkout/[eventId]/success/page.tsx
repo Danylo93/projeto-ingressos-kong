@@ -1,9 +1,10 @@
 import { cookies } from "next/headers";
+import { revalidateTag } from "next/cache";
 import { Title } from "../../../../components/Title";
 import { EventModel } from "../../../../models";
 import { clearSpotsAction } from "../../../../actions";
 // queries
-export async function getEvent(eventId: string): Promise<EventModel> {
+async function getEvent(eventId: string): Promise<EventModel> {
   const response = await fetch(`${process.env.GOLANG_API_URL}/events/${eventId}`, {
     headers: {
       "apikey": process.env.GOLANG_API_TOKEN as string
@@ -19,13 +20,35 @@ export async function getEvent(eventId: string): Promise<EventModel> {
 
 export default async function CheckoutSuccessPage({
   params,
+  searchParams,
 }: {
   params: { eventId: string };
+  searchParams: { session_id?: string };
 }) {
+  const cookieStore = cookies();
+  const selectedSpots = JSON.parse(cookieStore.get("spots")?.value || "[]");
+  const ticketKind = cookieStore.get("ticketKind")?.value || "full";
+  const userCookie = cookieStore.get("user")?.value;
+  const user = userCookie ? JSON.parse(userCookie) : null;
+  if (searchParams.session_id && selectedSpots.length > 0 && user) {
+    await fetch(`${process.env.GOLANG_API_URL}/checkout`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": process.env.GOLANG_API_TOKEN as string,
+      },
+      body: JSON.stringify({
+        event_id: params.eventId,
+        spots: selectedSpots,
+        ticket_kind: ticketKind,
+        card_hash: searchParams.session_id,
+        email: user.email,
+      }),
+    });
+    revalidateTag(`events/${params.eventId}`);
+    await clearSpotsAction();
+  }
   const event = await getEvent(params.eventId);
-  const cookiesStore = cookies();
-  const selectedSpots = JSON.parse(cookiesStore.get("spots")?.value || "[]");
-  await clearSpotsAction();
   return (
     <main className="mt-10 flex flex-col flex-wrap items-center ">
       <Title>Compra realizada com sucesso!</Title>

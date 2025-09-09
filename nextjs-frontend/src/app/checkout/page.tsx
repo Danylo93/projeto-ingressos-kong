@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { EventModel } from "../../models";
 import { CheckoutForm } from "./CheckoutForm";
 
-export async function getEvent(eventId: string): Promise<EventModel> {
+async function getEvent(eventId: string): Promise<EventModel> {
   const response = await fetch(`${process.env.GOLANG_API_URL}/events/${eventId}`, {
     headers: {
       "apikey": process.env.GOLANG_API_TOKEN as string
