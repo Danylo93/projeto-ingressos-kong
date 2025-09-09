@@ -5,25 +5,25 @@ import { SpotSeat } from "../../../../components/SpotSeat";
 import { TicketKindSelect } from "./TicketKindSelect";
 import { cookies } from "next/headers";
 import { EventImage } from "../../../../components/EventImage";
+import { fetchJson } from "../../../../lib/api";
+import { Fragment } from "react";
 
-export async function getSpots(eventId: string): Promise<{
+export const dynamic = "force-dynamic";
+
+async function getSpots(eventId: string): Promise<{
   event: EventModel;
   spots: SpotModel[];
 }> {
-  const response = await fetch(
-    `${process.env.GOLANG_API_URL}/events/${eventId}/spots`,
-    {
-      headers: {
-        "apikey": process.env.GOLANG_API_TOKEN as string
-      },
-      cache: "no-store",
-      next: {
-        tags: [`events/${eventId}`],
-      }
-    }
-  );
-
-  return response.json();
+  try {
+    const base = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    return await fetchJson<{ event: EventModel; spots: SpotModel[] }>(
+      `${base}/api/event/${eventId}/spots`,
+      { cache: "no-store" }
+    );
+  } catch (err) {
+    console.error("Failed to load spots", err);
+    return { event: {} as EventModel, spots: [] };
+  }
 }
 
 export default async function SpotsLayoutPage({
@@ -33,42 +33,27 @@ export default async function SpotsLayoutPage({
 }) {
   const { event, spots } = await getSpots(params.eventId);
 
-  //[a, a, a, b, b,  c, d]
-  const rowLetters = spots.map((spot) => spot.name[0]);
-
-  //[a, b, c, d]
-  const uniqueRows = rowLetters.filter(
-    (row, index) => rowLetters.indexOf(row) === index
+  // Ordena os lugares numericamente (S1, S2, ... S3000)
+  const sortedSpots = spots.sort(
+    (a, b) => parseInt(a.name.slice(1)) - parseInt(b.name.slice(1))
   );
 
-  const spotGroupedByRow = uniqueRows.map((row) => {
-    return {
-      row,
-      spots: [
-        ...spots
-          .filter((spot) => spot.name[0] === row)
-          .sort((a, b) => {
-            const aNumber = parseInt(a.name.slice(1));
-            const bNumber = parseInt(b.name.slice(1));
-
-            if (aNumber < bNumber) {
-              return -1;
-            }
-
-            if (aNumber > bNumber) {
-              return 1;
-            }
-
-            return 0;
-          }),
-      ],
-    };
-  });
+  // Distribui os assentos em linhas, inserindo um corredor central
+  const seatsPerRow = 50; // 25 assentos de cada lado
+  const spotRows: SpotModel[][] = [];
+  for (let i = 0; i < sortedSpots.length; i += seatsPerRow) {
+    spotRows.push(sortedSpots.slice(i, i + seatsPerRow));
+  }
 
   const cookieStore = cookies();
   const selectedSpots = JSON.parse(cookieStore.get("spots")?.value || "[]");
-  let totalPrice = selectedSpots.length * event.price;
+  const selectedSpotNames = selectedSpots.map((s: any) => s.name);
+  let totalPrice = selectedSpots.reduce(
+    (sum: number, s: any) => sum + s.price,
+    0
+  );
   const ticketKind = cookieStore.get("ticketKind")?.value || "full";
+  const isLogged = !!cookieStore.get("user")?.value;
 
   if (ticketKind === "half") {
     totalPrice = totalPrice / 2;
@@ -85,7 +70,6 @@ export default async function SpotsLayoutPage({
         <div className="flex max-w-full flex-col gap-y-6">
           <div className="flex flex-col gap-y-2 ">
             <p className="text-sm font-semibold uppercase text-subtitle">
-              {/* SÁB, 11/05/2024 - 20h00 */}
               {new Date(event.date).toLocaleDateString("pt-BR", {
                 weekday: "long",
                 day: "2-digit",
@@ -114,31 +98,37 @@ export default async function SpotsLayoutPage({
           <div className="rounded-2xl bg-bar py-4 text-center text-[20px] font-bold uppercase text-white">
             Palco
           </div>
-          <div className="md:w-full md:justify-normal">
-            {spotGroupedByRow.map((row) => {
-              return (
+          <div className="overflow-auto md:w-full md:justify-normal">
+            {spotRows.length > 0 ? (
+              spotRows.map((row, rowIndex) => (
                 <div
-                  key={row.row}
-                  className="flex flex-row gap-3 items-center mb-3"
+                  key={rowIndex}
+                  className="flex flex-row items-center gap-3 mb-2"
                 >
-                  <div className="w-4">{row.row}</div>
+                  <div className="w-6 text-center">{rowIndex + 1}</div>
                   <div className="ml-2 flex flex-row">
-                    {row.spots.map((spot) => {
-                      return (
+                    {row.map((spot, idx) => (
+                      <Fragment key={spot.name}>
+                        {idx === seatsPerRow / 2 && (
+                          <div className="mx-1 h-6 w-6 rounded-sm bg-bar" />
+                        )}
                         <SpotSeat
-                          key={spot.name}
                           spotId={spot.name}
                           spotLabel={spot.name.slice(1)}
                           eventId={event.id}
-                          selected={selectedSpots.includes(spot.name)}
-                          disabled={spot.status === "sold"}
+                          selected={selectedSpotNames.includes(spot.name)}
+                          disabled={spot.status === "sold" || !isLogged}
+                          spotType={spot.type}
+                          price={spot.price}
                         />
-                      );
-                    })}
+                      </Fragment>
+                    ))}
                   </div>
                 </div>
-              );
-            })}
+              ))
+            ) : (
+              <p className="text-center py-4">Nenhum assento disponível.</p>
+            )}
           </div>
           <div className="flex w-full flex-row justify-around">
             <div className=" flex flex-row items-center">
@@ -154,28 +144,42 @@ export default async function SpotsLayoutPage({
               Selecionado
             </div>
           </div>
+          {!isLogged && (
+            <p className="text-center text-sm">Faça login para selecionar assentos.</p>
+          )}
         </div>
         <div className="flex w-full max-w-[478px] flex-col gap-y-6 rounded-2xl bg-secondary px-4 py-6">
-          <h1 className="text-[20px] font-semibold">
-            Confira os valores do evento
-          </h1>
-          <p>
-            Inteira: {"R$ 100,00"} <br />
-            Meia-entrada: {`R$ 50,00`}
-          </p>
+          <h1 className="text-[20px] font-semibold">Confira os valores do evento</h1>
+          {Array.from(
+            new Map(spots.map((s) => [s.type, s.price])).entries()
+          ).map(([type, price]) => (
+            <p key={type}>
+              {type.charAt(0).toUpperCase() + type.slice(1)}: {" "}
+              {new Intl.NumberFormat("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              }).format(price)}
+            </p>
+          ))}
           <div className="flex flex-col">
-            <TicketKindSelect
-              defaultValue={ticketKind as any}
-              price={event.price}
-            />
+            <TicketKindSelect defaultValue={ticketKind as any} price={event.price} />
           </div>
           <div>Total: {formattedTotalPrice}</div>
-          <Link
-            href="/checkout"
-            className="rounded-lg bg-btn-primary py-4 text-sm font-semibold uppercase text-btn-primary text-center hover:bg-[#fff]"
-          >
-            Ir para pagamento
-          </Link>
+          {isLogged ? (
+            <Link
+              href="/checkout"
+              className={`rounded-lg bg-btn-primary py-4 text-sm font-semibold uppercase text-btn-primary text-center hover:bg-[#fff] ${selectedSpots.length === 0 ? "pointer-events-none opacity-50" : ""}`}
+            >
+              Ir para pagamento
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="rounded-lg bg-btn-primary py-4 text-sm font-semibold uppercase text-btn-primary text-center hover:bg-[#fff]"
+            >
+              Faça login para comprar
+            </Link>
+          )}
         </div>
       </div>
     </main>

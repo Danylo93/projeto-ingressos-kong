@@ -39,13 +39,13 @@ func NewTicket(event *Event, spot *Spot, ticketKind TicketKind) (*Ticket, error)
 		return nil, ErrInvalidTicketKind
 	}
 
-	ticket := &Ticket{
-		ID:         uuid.New().String(),
-		EventID:    event.ID,
-		Spot:       spot,
-		TicketKind: ticketKind,
-		Price:      event.Price,
-	}
+       ticket := &Ticket{
+               ID:         uuid.New().String(),
+               EventID:    event.ID,
+               Spot:       spot,
+               TicketKind: ticketKind,
+               Price:      spot.Price,
+       }
 	ticket.CalculatePrice()
 	if err := ticket.Validate(); err != nil {
 		return nil, err

@@ -1,0 +1,61 @@
+import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { fetchApiJson } from "../../../lib/api";
+import { EventModel } from "../../../models";
+
+export async function POST(req: Request) {
+  const { email } = await req.json();
+  const cookieStore = cookies();
+  const eventId = cookieStore.get("eventId")?.value;
+  const spots = JSON.parse(cookieStore.get("spots")?.value || "[]");
+  const ticketKind = cookieStore.get("ticketKind")?.value || "full";
+  if (!eventId || spots.length === 0) {
+    return NextResponse.json({ message: "Dados incompletos" }, { status: 400 });
+  }
+  let event: EventModel;
+  try {
+    event = await fetchApiJson<EventModel>(
+      `/events/${eventId}`,
+      {
+        cache: "no-store",
+      }
+    );
+  } catch {
+    return NextResponse.json({ message: "Evento não encontrado" }, { status: 400 });
+  }
+  let totalPrice = spots.reduce((sum: number, s: any) => sum + s.price, 0);
+  if (ticketKind === "half") {
+    totalPrice = totalPrice / 2;
+  }
+
+  const params = new URLSearchParams();
+  params.append("mode", "payment");
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  params.append(
+    "success_url",
+    `${appUrl}/checkout/${eventId}/success?session_id={CHECKOUT_SESSION_ID}`
+  );
+  params.append("cancel_url", `${appUrl}/checkout`);
+  params.append("customer_email", email);
+  params.append("line_items[0][quantity]", "1");
+  params.append("line_items[0][price_data][currency]", "brl");
+  params.append("line_items[0][price_data][product_data][name]", event.name);
+  params.append(
+    "line_items[0][price_data][unit_amount]",
+    String(Math.round(totalPrice * 100))
+  );
+
+  const stripeRes = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: params.toString(),
+  });
+  if (!stripeRes.ok) {
+    return NextResponse.json({ message: "Erro ao criar sessão" }, { status: 500 });
+  }
+  const session = await stripeRes.json();
+  return NextResponse.json({ url: session.url });
+}

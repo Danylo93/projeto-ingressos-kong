@@ -59,7 +59,7 @@ func TestEvent_AddSpot(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, event)
 
-	spot, err := event.AddSpot("A1")
+       spot, err := event.AddSpot("A1", "arquibancada", 50.0)
 	assert.Nil(t, err)
 	assert.NotNil(t, spot)
 	assert.Equal(t, "A1", spot.Name)

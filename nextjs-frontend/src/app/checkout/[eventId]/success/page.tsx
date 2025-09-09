@@ -1,29 +1,68 @@
 import { cookies } from "next/headers";
+import { revalidateTag } from "next/cache";
 import { Title } from "../../../../components/Title";
 import { EventModel } from "../../../../models";
-// queries
-export async function getEvent(eventId: string): Promise<EventModel> {
-  const response = await fetch(`${process.env.GOLANG_API_URL}/events/${eventId}`, {
-    headers: {
-      "apikey": process.env.GOLANG_API_TOKEN as string
-    },
-    cache: "no-store",
-    next: {
-      tags: [`events/${eventId}`],
-    }
-  });
+import { clearSpotsAction } from "../../../../actions";
+import { fetchApiJson } from "../../../../lib/api";
+import { API_BASE_URL, API_TOKEN } from "../../../../lib/config";
 
-  return response.json();
+export const dynamic = "force-dynamic";
+// queries
+async function getEvent(eventId: string): Promise<EventModel | null> {
+  try {
+    return await fetchApiJson<EventModel>(
+      `/events/${eventId}`,
+      {
+        cache: "no-store",
+        next: {
+          tags: [`events/${eventId}`],
+        },
+      }
+    );
+  } catch (err) {
+    console.error("Failed to load event", err);
+    return null;
+  }
 }
 
 export default async function CheckoutSuccessPage({
   params,
+  searchParams,
 }: {
   params: { eventId: string };
+  searchParams: { session_id?: string };
 }) {
+  const cookieStore = cookies();
+  const selectedSpots = JSON.parse(cookieStore.get("spots")?.value || "[]");
+  const ticketKind = cookieStore.get("ticketKind")?.value || "full";
+  const userCookie = cookieStore.get("user")?.value;
+  const user = userCookie ? JSON.parse(userCookie) : null;
+  if (searchParams.session_id && selectedSpots.length > 0 && user) {
+      await fetch(`${API_BASE_URL}/checkout`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: API_TOKEN,
+        },
+        body: JSON.stringify({
+          event_id: params.eventId,
+          spots: selectedSpots.map((s: any) => s.name),
+          ticket_kind: ticketKind,
+          card_hash: searchParams.session_id,
+          email: user.email,
+        }),
+      });
+    revalidateTag(`events/${params.eventId}`);
+    await clearSpotsAction();
+  }
   const event = await getEvent(params.eventId);
-  const cookiesStore = cookies();
-  const selectedSpots = JSON.parse(cookiesStore.get("spots")?.value || "[]");
+  if (!event) {
+    return (
+      <main className="mt-10 flex flex-col flex-wrap items-center ">
+        <Title>Evento não encontrado</Title>
+      </main>
+    );
+  }
   return (
     <main className="mt-10 flex flex-col flex-wrap items-center ">
       <Title>Compra realizada com sucesso!</Title>
@@ -42,7 +81,7 @@ export default async function CheckoutSuccessPage({
             year: "numeric",
           })}
         </p>
-        <p className="font-semibold text-white">Lugares escolhidos: {selectedSpots.join(", ")}</p>
+        <p className="font-semibold text-white">Lugares escolhidos: {selectedSpots.map((s: any) => s.name).join(", ")}</p>
         
       </div>
     </main>

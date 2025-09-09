@@ -20,32 +20,36 @@ const (
 )
 
 type Spot struct {
-	ID       string
-	EventID  string
-	Name     string // all name uses the rule: Letter+Number. Ex: A1, B2, C3, etc.
-	Status   SpotStatus
-	TicketID string
+        ID       string
+        EventID  string
+        Name     string // all name uses the rule: Letter+Number. Ex: A1, B2, C3, etc.
+       Type     string
+       Price    float64
+       Status   SpotStatus
+       TicketID string
 }
 
 // NewSpot creates a new spot with the given parameters.
-func NewSpot(event *Event, name string) (*Spot, error) {
-	spot := &Spot{
-		ID:      uuid.New().String(),
-		EventID: event.ID,
-		Name:    name,
-		Status:  SpotStatusAvailable,
-	}
-	if err := spot.Validate(); err != nil {
-		return nil, err
-	}
-	return spot, nil
+func NewSpot(event *Event, name, spotType string, price float64) (*Spot, error) {
+       spot := &Spot{
+               ID:      uuid.New().String(),
+               EventID: event.ID,
+               Name:    name,
+               Type:    spotType,
+               Price:   price,
+               Status:  SpotStatusAvailable,
+       }
+       if err := spot.Validate(); err != nil {
+               return nil, err
+       }
+       return spot, nil
 }
 
 // Validate checks if the spot data is valid.
 func (s *Spot) Validate() error {
-	if len(s.Name) == 0 {
-		return errors.New("spot name is required")
-	}
+        if len(s.Name) == 0 {
+                return errors.New("spot name is required")
+        }
 	if len(s.Name) < 2 {
 		return errors.New("spot name must be at least 2 characters long")
 	}
@@ -53,10 +57,16 @@ func (s *Spot) Validate() error {
 	if s.Name[0] < 'A' || s.Name[0] > 'Z' {
 		return errors.New("spot name must start with a letter")
 	}
-	if s.Name[1] < '0' || s.Name[1] > '9' {
-		return errors.New("spot name must end with a number")
-	}
-	return nil
+        if s.Name[1] < '0' || s.Name[1] > '9' {
+                return errors.New("spot name must end with a number")
+        }
+       if s.Type == "" {
+               return errors.New("spot type is required")
+       }
+       if s.Price <= 0 {
+               return errors.New("spot price must be greater than zero")
+       }
+        return nil
 }
 
 // Reserve reserves the spot for the given ticket ID.

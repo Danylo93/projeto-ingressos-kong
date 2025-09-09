@@ -1,43 +1,54 @@
 "use client";
 
-import { PropsWithChildren } from "react";
-import { checkoutAction } from "../../actions";
-import { useFormState } from "react-dom";
+import { useState, PropsWithChildren } from "react";
 import { ErrorMessage } from "../../components/ErrorMessage";
-
-export async function getCardHash({ cardName, cardNumber, expireDate, cvv }) {
-  return Math.random().toString(36).substring(7);
-}
+import { fetchJson } from "../../lib/api";
 
 export type CheckoutFormProps = {
   className?: string;
 };
 
 export function CheckoutForm(props: PropsWithChildren<CheckoutFormProps>) {
-
-  const [state, formAction] = useFormState(checkoutAction, {
-    error: null as string | null,
-  });
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   return (
     <form
-      action={async (formData: FormData) => {
-        const card_hash = await getCardHash({
-          cardName: formData.get("card_name") as string,
-          cardNumber: formData.get("cc") as string,
-          expireDate: formData.get("expire_date") as string,
-          cvv: formData.get("cvv") as string,
-        });
-        formAction({
-          cardHash: card_hash,
-          email: formData.get("email") as string,
-        });
+      onSubmit={async (event) => {
+        event.preventDefault();
+        setLoading(true);
+        setError(null);
+        const form = event.currentTarget as HTMLFormElement;
+        const email = (form.elements.namedItem("email") as HTMLInputElement).value;
+        try {
+          const data = await fetchJson<{ url: string }>(
+            "/api/create-checkout-session",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ email }),
+            }
+          );
+          window.location.href = data.url;
+        } catch {
+          setError("Erro ao iniciar pagamento");
+        } finally {
+          setLoading(false);
+        }
       }}
       className={props.className}
     >
-      {state?.error && <ErrorMessage error={state.error} />}
-      <input type="hidden" name="card_hash" />
+      {error && <ErrorMessage error={error} />}
       {props.children}
+      <button
+        type="submit"
+        disabled={loading}
+        className="rounded-lg bg-btn-primary py-4 px-4 text-sm font-semibold uppercase text-btn-primary"
+      >
+        {loading ? "Processando..." : "Finalizar pagamento"}
+      </button>
     </form>
   );
 }
