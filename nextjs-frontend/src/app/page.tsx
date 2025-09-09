@@ -1,22 +1,16 @@
 import { Title } from "../components/Title";
 import { EventModel } from "../models";
 import { EventCard } from "../components/EventCard";
-import { fetchJson } from "../lib/api";
+import { fetchApiJson } from "../lib/api";
 
 export const dynamic = "force-dynamic";
 
 async function getEvents(): Promise<EventModel[]> {
   try {
-    const data = await fetchJson<{ events: EventModel[] }>(
-      `${process.env.GOLANG_API_URL}/events`,
+    const data = await fetchApiJson<{ events: EventModel[] }>(
+      "/events",
       {
-        headers: {
-          "apikey": process.env.GOLANG_API_TOKEN as string,
-        },
         cache: "no-store",
-        // next: {
-        //   tags: ["events"],
-        // }
       }
     );
     return data.events;

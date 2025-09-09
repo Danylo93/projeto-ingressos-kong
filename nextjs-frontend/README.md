@@ -24,19 +24,19 @@ npm run dev
 
 ### Variáveis de ambiente
 
-Para testar o pagamento com Stripe é necessário definir as variáveis abaixo no arquivo `.env.local`:
+Para testar o pagamento com Stripe é necessário definir as variáveis abaixo no arquivo `.env.local` (um exemplo está disponível em `.env.example`):
 
 ```
 STRIPE_SECRET_KEY=sk_test_...
 NEXT_PUBLIC_APP_URL=http://localhost:3000
-GOLANG_API_URL=http://localhost:8000
+GOLANG_API_URL=http://golang:8080
 GOLANG_API_TOKEN=changeme
 ```
 
 Utilize as chaves de teste disponibilizadas pelo [Stripe](https://stripe.com/docs/keys#test-live-modes) e cartões de teste para realizar compras.
 
 > **Erro "Unexpected token 'd', 'dial tcp'..."?**
-> Certifique-se de que a API em Go esteja rodando e que as variáveis `GOLANG_API_URL` e `GOLANG_API_TOKEN` estejam corretas. Esse problema ocorre quando a resposta do backend não está em JSON, geralmente por falta de conexão.
+> Certifique-se de que a API em Go esteja rodando e que as variáveis `GOLANG_API_URL` e `GOLANG_API_TOKEN` estejam corretas (no Docker use `http://golang:8080`). Esse problema ocorre quando a resposta do backend não está em JSON, geralmente por falta de conexão ou host incorreto.
 
 Após subir a aplicação, acesse `http://localhost:3000` e crie uma conta com nome, e-mail, igreja, pastor, WhatsApp e senha. Somente usuários logados podem selecionar assentos; seus dados aparecem no cabeçalho e o resumo dos assentos escolhidos com o valor total é exibido no rodapé. Depois de selecionar os assentos, finalize o pagamento via Stripe.
 

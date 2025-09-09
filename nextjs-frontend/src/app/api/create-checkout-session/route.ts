@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { fetchJson } from "../../../lib/api";
+import { fetchApiJson } from "../../../lib/api";
 import { EventModel } from "../../../models";
 
 export async function POST(req: Request) {
@@ -14,12 +14,9 @@ export async function POST(req: Request) {
   }
   let event: EventModel;
   try {
-    event = await fetchJson<EventModel>(
-      `${process.env.GOLANG_API_URL}/events/${eventId}`,
+    event = await fetchApiJson<EventModel>(
+      `/events/${eventId}`,
       {
-        headers: {
-          "apikey": process.env.GOLANG_API_TOKEN as string,
-        },
         cache: "no-store",
       }
     );

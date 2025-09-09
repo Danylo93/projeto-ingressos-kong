@@ -3,6 +3,7 @@
 import { revalidateTag } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { API_BASE_URL, API_TOKEN } from "./lib/config";
 
 export async function selectSpotAction(
   eventId: string,
@@ -53,7 +54,7 @@ export async function checkoutAction(prevState: any, {
   const spots = JSON.parse(cookieStore.get("spots")?.value || "[]");
   const ticketKind = cookieStore.get("ticketKind")?.value || "full";
 
-  const response = await fetch(`${process.env.GOLANG_API_URL}/checkout`, {
+  const response = await fetch(`${API_BASE_URL}/checkout`, {
     method: "POST",
     body: JSON.stringify({
       event_id: eventId,
@@ -64,7 +65,7 @@ export async function checkoutAction(prevState: any, {
     }),
     headers: {
       "Content-Type": "application/json",
-      "apikey": process.env.GOLANG_API_TOKEN as string
+      apikey: API_TOKEN,
     },
   });
 

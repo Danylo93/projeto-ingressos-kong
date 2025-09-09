@@ -3,18 +3,15 @@ import { Title } from "../../components/Title";
 import { redirect } from "next/navigation";
 import { EventModel } from "../../models";
 import { CheckoutForm } from "./CheckoutForm";
-import { fetchJson } from "../../lib/api";
+import { fetchApiJson } from "../../lib/api";
 
 export const dynamic = "force-dynamic";
 
 async function getEvent(eventId: string): Promise<EventModel | null> {
   try {
-    return await fetchJson<EventModel>(
-      `${process.env.GOLANG_API_URL}/events/${eventId}`,
+    return await fetchApiJson<EventModel>(
+      `/events/${eventId}`,
       {
-        headers: {
-          "apikey": process.env.GOLANG_API_TOKEN as string,
-        },
         cache: "no-store",
         next: {
           tags: [`events/${eventId}`],

@@ -5,7 +5,7 @@ import { SpotSeat } from "../../../../components/SpotSeat";
 import { TicketKindSelect } from "./TicketKindSelect";
 import { cookies } from "next/headers";
 import { EventImage } from "../../../../components/EventImage";
-import { fetchJson } from "../../../../lib/api";
+import { fetchApiJson } from "../../../../lib/api";
 import { Fragment } from "react";
 
 export const dynamic = "force-dynamic";
@@ -15,13 +15,10 @@ async function getSpots(eventId: string): Promise<{
   spots: SpotModel[];
 }> {
   try {
-    return await fetchJson<{
+    return await fetchApiJson<{
       event: EventModel;
       spots: SpotModel[];
-    }>(`${process.env.GOLANG_API_URL}/events/${eventId}/spots`, {
-      headers: {
-        "apikey": process.env.GOLANG_API_TOKEN as string,
-      },
+    }>(`/events/${eventId}/spots`, {
       cache: "no-store",
       next: {
         tags: [`events/${eventId}`],

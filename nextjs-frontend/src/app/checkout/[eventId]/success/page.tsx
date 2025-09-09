@@ -3,18 +3,16 @@ import { revalidateTag } from "next/cache";
 import { Title } from "../../../../components/Title";
 import { EventModel } from "../../../../models";
 import { clearSpotsAction } from "../../../../actions";
-import { fetchJson } from "../../../../lib/api";
+import { fetchApiJson } from "../../../../lib/api";
+import { API_BASE_URL, API_TOKEN } from "../../../../lib/config";
 
 export const dynamic = "force-dynamic";
 // queries
 async function getEvent(eventId: string): Promise<EventModel | null> {
   try {
-    return await fetchJson<EventModel>(
-      `${process.env.GOLANG_API_URL}/events/${eventId}`,
+    return await fetchApiJson<EventModel>(
+      `/events/${eventId}`,
       {
-        headers: {
-          "apikey": process.env.GOLANG_API_TOKEN as string,
-        },
         cache: "no-store",
         next: {
           tags: [`events/${eventId}`],
@@ -40,15 +38,15 @@ export default async function CheckoutSuccessPage({
   const userCookie = cookieStore.get("user")?.value;
   const user = userCookie ? JSON.parse(userCookie) : null;
   if (searchParams.session_id && selectedSpots.length > 0 && user) {
-      await fetch(`${process.env.GOLANG_API_URL}/checkout`, {
+      await fetch(`${API_BASE_URL}/checkout`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "apikey": process.env.GOLANG_API_TOKEN as string,
+          apikey: API_TOKEN,
         },
         body: JSON.stringify({
           event_id: params.eventId,
-        spots: selectedSpots.map((s: any) => s.name),
+          spots: selectedSpots.map((s: any) => s.name),
           ticket_kind: ticketKind,
           card_hash: searchParams.session_id,
           email: user.email,
