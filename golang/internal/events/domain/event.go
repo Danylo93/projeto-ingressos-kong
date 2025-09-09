@@ -88,11 +88,11 @@ func (e *Event) Validate() error {
 }
 
 // AddSpot adds a spot to the event.
-func (e *Event) AddSpot(name string) (*Spot, error) {
-	spot, err := NewSpot(e, name)
-	if err != nil {
-		return nil, err
-	}
-	e.Spots = append(e.Spots, *spot)
-	return spot, nil
+func (e *Event) AddSpot(name, spotType string, price float64) (*Spot, error) {
+       spot, err := NewSpot(e, name, spotType, price)
+       if err != nil {
+               return nil, err
+       }
+       e.Spots = append(e.Spots, *spot)
+       return spot, nil
 }

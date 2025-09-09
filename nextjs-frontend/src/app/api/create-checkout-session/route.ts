@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Evento não encontrado" }, { status: 400 });
   }
   const event = await eventRes.json();
-  let totalPrice = spots.length * event.price;
+  let totalPrice = spots.reduce((sum: number, s: any) => sum + s.price, 0);
   if (ticketKind === "half") {
     totalPrice = totalPrice / 2;
   }

@@ -37,6 +37,8 @@ Utilize as chaves de teste disponibilizadas pelo [Stripe](https://stripe.com/doc
 
 Após subir a aplicação, acesse `http://localhost:3000` e crie uma conta com nome, e-mail, igreja, pastor, WhatsApp e senha. Somente usuários logados podem selecionar assentos; seus dados aparecem no cabeçalho e o resumo dos assentos escolhidos com o valor total é exibido no rodapé. Depois de selecionar os assentos, finalize o pagamento via Stripe.
 
+O evento de demonstração possui **3.000 assentos** divididos em `arquibancada`, `cadeira` e `vip`. Passe o mouse sobre os assentos para visualizar o número e o tipo antes de selecionar. O preço total é calculado de acordo com o tipo de assento escolhido.
+
 Ao retornar da página de pagamento com sucesso, a aplicação confirma a compra junto à API em Go utilizando o `session_id` da Stripe, marcando os assentos como vendidos sem uso de dados falsos.
 
 ### Para Windows 

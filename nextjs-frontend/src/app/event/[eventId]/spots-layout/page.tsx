@@ -60,7 +60,11 @@ export default async function SpotsLayoutPage({
 
   const cookieStore = cookies();
   const selectedSpots = JSON.parse(cookieStore.get("spots")?.value || "[]");
-  let totalPrice = selectedSpots.length * event.price;
+  const selectedSpotNames = selectedSpots.map((s: any) => s.name);
+  let totalPrice = selectedSpots.reduce(
+    (sum: number, s: any) => sum + s.price,
+    0
+  );
   const ticketKind = cookieStore.get("ticketKind")?.value || "full";
   const isLogged = !!cookieStore.get("user")?.value;
 
@@ -120,8 +124,10 @@ export default async function SpotsLayoutPage({
                           spotId={spot.name}
                           spotLabel={spot.name.slice(1)}
                           eventId={event.id}
-                          selected={selectedSpots.includes(spot.name)}
+                          selected={selectedSpotNames.includes(spot.name)}
                           disabled={spot.status === "sold" || !isLogged}
+                          spotType={spot.type}
+                          price={spot.price}
                         />
                       );
                     })}
@@ -150,10 +156,17 @@ export default async function SpotsLayoutPage({
         </div>
         <div className="flex w-full max-w-[478px] flex-col gap-y-6 rounded-2xl bg-secondary px-4 py-6">
           <h1 className="text-[20px] font-semibold">Confira os valores do evento</h1>
-          <p>
-            Inteira: {"R$ 100,00"} <br />
-            Meia-entrada: {`R$ 50,00`}
-          </p>
+          {Array.from(
+            new Map(spots.map((s) => [s.type, s.price])).entries()
+          ).map(([type, price]) => (
+            <p key={type}>
+              {type.charAt(0).toUpperCase() + type.slice(1)}: {" "}
+              {new Intl.NumberFormat("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              }).format(price)}
+            </p>
+          ))}
           <div className="flex flex-col">
             <TicketKindSelect defaultValue={ticketKind as any} price={event.price} />
           </div>

@@ -10,7 +10,7 @@ function getCookie(name: string) {
 }
 
 export function Footer() {
-  const [spots, setSpots] = useState<string[]>([]);
+  const [spots, setSpots] = useState<any[]>([]);
   const [total, setTotal] = useState<string>("");
 
   useEffect(() => {
@@ -22,13 +22,16 @@ export function Footer() {
         setTotal("");
         return;
       }
-      const parsedSpots: string[] = JSON.parse(spotsCookie);
+      const parsedSpots: any[] = JSON.parse(spotsCookie);
       setSpots(parsedSpots);
       fetch(`/api/event/${eventId}`)
         .then((res) => res.json())
         .then((event) => {
           const ticketKind = getCookie("ticketKind") || "full";
-          let price = parsedSpots.length * event.price;
+          let price = parsedSpots.reduce(
+            (sum, s) => sum + s.price,
+            0
+          );
           if (ticketKind === "half") price = price / 2;
           setTotal(
             price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
@@ -45,7 +48,7 @@ export function Footer() {
 
   return (
     <footer className="mt-auto w-full bg-[#1D232A] text-white p-4 flex flex-wrap justify-between gap-y-2">
-      <div>Assentos: {spots.join(", ")}</div>
+      <div>Assentos: {spots.map((s) => s.name).join(", ")}</div>
       <div>Total: {total}</div>
     </footer>
   );

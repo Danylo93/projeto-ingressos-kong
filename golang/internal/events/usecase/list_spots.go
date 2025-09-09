@@ -32,12 +32,14 @@ func (uc *ListSpotsUseCase) Execute(input ListSpotsInputDTO) (*ListSpotsOutputDT
 
 	spotDTOs := make([]SpotDTO, len(spots))
 	for i, spot := range spots {
-		spotDTOs[i] = SpotDTO{
-			ID:       spot.ID,
-			Name:     spot.Name,
-			Status:   string(spot.Status),
-			TicketID: spot.TicketID,
-		}
+               spotDTOs[i] = SpotDTO{
+                       ID:       spot.ID,
+                       Name:     spot.Name,
+                       Status:   string(spot.Status),
+                       TicketID: spot.TicketID,
+                       Type:     spot.Type,
+                       Price:    spot.Price,
+               }
 	}
 
 	eventDTO := EventDTO{

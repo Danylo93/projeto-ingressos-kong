@@ -8,6 +8,8 @@ interface SpotSeatProps {
   eventId: string;
   selected: boolean;
   disabled: boolean;
+  spotType: string;
+  price: number;
 }
 
 export const SpotSeat = ({
@@ -16,6 +18,8 @@ export const SpotSeat = ({
   eventId,
   selected,
   disabled,
+  spotType,
+  price,
 }: SpotSeatProps) => {
   return (
     <div className="flex">
@@ -29,7 +33,7 @@ export const SpotSeat = ({
         defaultChecked={selected}
         onChange={async (event) => {
           event.target.checked
-            ? await selectSpotAction(eventId, spotId)
+            ? await selectSpotAction(eventId, spotId, spotType, price)
             : await unselectSpotAction(spotId);
         }}
       />
@@ -42,6 +46,7 @@ export const SpotSeat = ({
           peer-disabled:cursor-default
           peer-disabled:bg-[#A6ADBB]
           "
+        title={`${spotId} - ${spotType}`}
       >
         {spotLabel}
       </label>

@@ -28,6 +28,8 @@ Aplicação de exemplo para gestão de ingressos de eventos de igrejas. Evento d
 
 O frontend requer as variáveis de ambiente `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_APP_URL`, `GOLANG_API_URL` e `GOLANG_API_TOKEN`. Consulte o README da pasta `nextjs-frontend` para detalhes. Para comprar ingressos é necessário cadastrar-se e fazer login; somente usuários autenticados conseguem selecionar assentos. Após o login, os dados do usuário aparecem no cabeçalho e os assentos escolhidos com o valor total aparecem no rodapé da página.
 
+O banco de dados inicializa automaticamente **3.000 lugares** para a Conferência da Zona Leste, distribuídos entre setores de `arquibancada`, `cadeira` e `vip`, cada um com valores distintos. Ao passar o mouse sobre um assento é possível ver o número e o tipo antes de selecioná-lo.
+
 Os pagamentos são processados pela Stripe e, ao concluir a compra, a API em Go registra os assentos como vendidos sem uso de dados mockados.
 
 ---

@@ -31,20 +31,20 @@ export default async function CheckoutSuccessPage({
   const userCookie = cookieStore.get("user")?.value;
   const user = userCookie ? JSON.parse(userCookie) : null;
   if (searchParams.session_id && selectedSpots.length > 0 && user) {
-    await fetch(`${process.env.GOLANG_API_URL}/checkout`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "apikey": process.env.GOLANG_API_TOKEN as string,
-      },
-      body: JSON.stringify({
-        event_id: params.eventId,
-        spots: selectedSpots,
-        ticket_kind: ticketKind,
-        card_hash: searchParams.session_id,
-        email: user.email,
-      }),
-    });
+      await fetch(`${process.env.GOLANG_API_URL}/checkout`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": process.env.GOLANG_API_TOKEN as string,
+        },
+        body: JSON.stringify({
+          event_id: params.eventId,
+        spots: selectedSpots.map((s: any) => s.name),
+          ticket_kind: ticketKind,
+          card_hash: searchParams.session_id,
+          email: user.email,
+        }),
+      });
     revalidateTag(`events/${params.eventId}`);
     await clearSpotsAction();
   }
@@ -67,7 +67,7 @@ export default async function CheckoutSuccessPage({
             year: "numeric",
           })}
         </p>
-        <p className="font-semibold text-white">Lugares escolhidos: {selectedSpots.join(", ")}</p>
+        <p className="font-semibold text-white">Lugares escolhidos: {selectedSpots.map((s: any) => s.name).join(", ")}</p>
         
       </div>
     </main>

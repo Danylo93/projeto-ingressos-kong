@@ -28,7 +28,10 @@ export default async function CheckoutPage() {
   const user = JSON.parse(userCookie);
   const event = await getEvent(eventId);
   const selectedSpots = JSON.parse(cookiesStore.get("spots")?.value || "[]");
-  let totalPrice = selectedSpots.length * event.price;
+  let totalPrice = selectedSpots.reduce(
+    (sum: number, s: any) => sum + s.price,
+    0
+  );
   const ticketKind = cookiesStore.get("ticketKind")?.value;
   if (ticketKind === "half") {
     totalPrice = totalPrice / 2;

@@ -51,10 +51,10 @@ func TestBuyTicketsUseCase(t *testing.T) {
 		Capacity:     100,
 		Price:        50.0,
 		PartnerID:    1,
-		Spots: []domain.Spot{
-			{ID: "1", EventID: eventID, Name: "A1", Status: domain.SpotStatusAvailable},
-			{ID: "2", EventID: eventID, Name: "A2", Status: domain.SpotStatusAvailable},
-		},
+                Spots: []domain.Spot{
+                        {ID: "1", EventID: eventID, Name: "A1", Type: "arquibancada", Price: 50.0, Status: domain.SpotStatusAvailable},
+                        {ID: "2", EventID: eventID, Name: "A2", Type: "arquibancada", Price: 50.0, Status: domain.SpotStatusAvailable},
+                },
 		Tickets: []domain.Ticket{},
 	}
 
