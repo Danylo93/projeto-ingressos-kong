@@ -15,8 +15,9 @@ async function getSpots(eventId: string): Promise<{
   spots: SpotModel[];
 }> {
   try {
+    const base = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     return await fetchJson<{ event: EventModel; spots: SpotModel[] }>(
-      `${process.env.NEXT_PUBLIC_APP_URL || ""}/api/event/${eventId}/spots`,
+      `${base}/api/event/${eventId}/spots`,
       { cache: "no-store" }
     );
   } catch (err) {

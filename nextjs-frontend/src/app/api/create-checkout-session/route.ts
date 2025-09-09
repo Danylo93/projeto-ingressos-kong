@@ -30,11 +30,12 @@ export async function POST(req: Request) {
 
   const params = new URLSearchParams();
   params.append("mode", "payment");
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   params.append(
     "success_url",
-    `${process.env.NEXT_PUBLIC_APP_URL}/checkout/${eventId}/success?session_id={CHECKOUT_SESSION_ID}`
+    `${appUrl}/checkout/${eventId}/success?session_id={CHECKOUT_SESSION_ID}`
   );
-  params.append("cancel_url", `${process.env.NEXT_PUBLIC_APP_URL}/checkout`);
+  params.append("cancel_url", `${appUrl}/checkout`);
   params.append("customer_email", email);
   params.append("line_items[0][quantity]", "1");
   params.append("line_items[0][price_data][currency]", "brl");
