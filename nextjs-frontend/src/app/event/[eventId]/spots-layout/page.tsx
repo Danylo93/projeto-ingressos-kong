@@ -6,6 +6,7 @@ import { TicketKindSelect } from "./TicketKindSelect";
 import { cookies } from "next/headers";
 import { EventImage } from "../../../../components/EventImage";
 import { fetchJson } from "../../../../lib/api";
+import { Fragment } from "react";
 
 export const dynamic = "force-dynamic";
 
@@ -39,30 +40,17 @@ export default async function SpotsLayoutPage({
 }) {
   const { event, spots } = await getSpots(params.eventId);
 
-  const rowLetters = spots.map((spot) => spot.name[0]);
-  const uniqueRows = rowLetters.filter(
-    (row, index) => rowLetters.indexOf(row) === index
+  // Ordena os lugares numericamente (S1, S2, ... S3000)
+  const sortedSpots = spots.sort(
+    (a, b) => parseInt(a.name.slice(1)) - parseInt(b.name.slice(1))
   );
-  const spotGroupedByRow = uniqueRows.map((row) => {
-    return {
-      row,
-      spots: [
-        ...spots
-          .filter((spot) => spot.name[0] === row)
-          .sort((a, b) => {
-            const aNumber = parseInt(a.name.slice(1));
-            const bNumber = parseInt(b.name.slice(1));
-            if (aNumber < bNumber) {
-              return -1;
-            }
-            if (aNumber > bNumber) {
-              return 1;
-            }
-            return 0;
-          }),
-      ],
-    };
-  });
+
+  // Distribui os assentos em linhas, inserindo um corredor central
+  const seatsPerRow = 50; // 25 assentos de cada lado
+  const spotRows: SpotModel[][] = [];
+  for (let i = 0; i < sortedSpots.length; i += seatsPerRow) {
+    spotRows.push(sortedSpots.slice(i, i + seatsPerRow));
+  }
 
   const cookieStore = cookies();
   const selectedSpots = JSON.parse(cookieStore.get("spots")?.value || "[]");
@@ -117,30 +105,33 @@ export default async function SpotsLayoutPage({
           <div className="rounded-2xl bg-bar py-4 text-center text-[20px] font-bold uppercase text-white">
             Palco
           </div>
-          <div className="md:w-full md:justify-normal">
-            {spotGroupedByRow.map((row) => {
-              return (
-                <div key={row.row} className="flex flex-row gap-3 items-center mb-3">
-                  <div className="w-4">{row.row}</div>
-                  <div className="ml-2 flex flex-row">
-                    {row.spots.map((spot) => {
-                      return (
-                        <SpotSeat
-                          key={spot.name}
-                          spotId={spot.name}
-                          spotLabel={spot.name.slice(1)}
-                          eventId={event.id}
-                          selected={selectedSpotNames.includes(spot.name)}
-                          disabled={spot.status === "sold" || !isLogged}
-                          spotType={spot.type}
-                          price={spot.price}
-                        />
-                      );
-                    })}
-                  </div>
+          <div className="overflow-auto md:w-full md:justify-normal">
+            {spotRows.map((row, rowIndex) => (
+              <div
+                key={rowIndex}
+                className="flex flex-row items-center gap-3 mb-2"
+              >
+                <div className="w-6 text-center">{rowIndex + 1}</div>
+                <div className="ml-2 flex flex-row">
+                  {row.map((spot, idx) => (
+                    <Fragment key={spot.name}>
+                      {idx === seatsPerRow / 2 && (
+                        <div className="mx-1 h-6 w-6 rounded-sm bg-bar" />
+                      )}
+                      <SpotSeat
+                        spotId={spot.name}
+                        spotLabel={spot.name.slice(1)}
+                        eventId={event.id}
+                        selected={selectedSpotNames.includes(spot.name)}
+                        disabled={spot.status === "sold" || !isLogged}
+                        spotType={spot.type}
+                        price={spot.price}
+                      />
+                    </Fragment>
+                  ))}
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
           <div className="flex w-full flex-row justify-around">
             <div className=" flex flex-row items-center">
