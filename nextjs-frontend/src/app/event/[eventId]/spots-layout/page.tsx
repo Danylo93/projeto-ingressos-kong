@@ -5,25 +5,31 @@ import { SpotSeat } from "../../../../components/SpotSeat";
 import { TicketKindSelect } from "./TicketKindSelect";
 import { cookies } from "next/headers";
 import { EventImage } from "../../../../components/EventImage";
+import { fetchJson } from "../../../../lib/api";
+
+export const dynamic = "force-dynamic";
 
 async function getSpots(eventId: string): Promise<{
   event: EventModel;
   spots: SpotModel[];
 }> {
-  const response = await fetch(
-    `${process.env.GOLANG_API_URL}/events/${eventId}/spots`,
-    {
+  try {
+    return await fetchJson<{
+      event: EventModel;
+      spots: SpotModel[];
+    }>(`${process.env.GOLANG_API_URL}/events/${eventId}/spots`, {
       headers: {
-        "apikey": process.env.GOLANG_API_TOKEN as string
+        "apikey": process.env.GOLANG_API_TOKEN as string,
       },
       cache: "no-store",
       next: {
         tags: [`events/${eventId}`],
-      }
-    }
-  );
-
-  return response.json();
+      },
+    });
+  } catch (err) {
+    console.error("Failed to load spots", err);
+    return { event: {} as EventModel, spots: [] };
+  }
 }
 
 export default async function SpotsLayoutPage({

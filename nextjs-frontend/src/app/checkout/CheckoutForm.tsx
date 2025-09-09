@@ -2,6 +2,7 @@
 
 import { useState, PropsWithChildren } from "react";
 import { ErrorMessage } from "../../components/ErrorMessage";
+import { fetchJson } from "../../lib/api";
 
 export type CheckoutFormProps = {
   className?: string;
@@ -19,20 +20,23 @@ export function CheckoutForm(props: PropsWithChildren<CheckoutFormProps>) {
         setError(null);
         const form = event.currentTarget as HTMLFormElement;
         const email = (form.elements.namedItem("email") as HTMLInputElement).value;
-        const response = await fetch("/api/create-checkout-session", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email }),
-        });
-        if (!response.ok) {
+        try {
+          const data = await fetchJson<{ url: string }>(
+            "/api/create-checkout-session",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ email }),
+            }
+          );
+          window.location.href = data.url;
+        } catch {
           setError("Erro ao iniciar pagamento");
+        } finally {
           setLoading(false);
-          return;
         }
-        const data = await response.json();
-        window.location.href = data.url;
       }}
       className={props.className}
     >

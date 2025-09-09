@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { fetchJson } from "../../../lib/api";
+import { EventModel } from "../../../models";
 
 export async function POST(req: Request) {
   const { email } = await req.json();
@@ -10,16 +12,20 @@ export async function POST(req: Request) {
   if (!eventId || spots.length === 0) {
     return NextResponse.json({ message: "Dados incompletos" }, { status: 400 });
   }
-  const eventRes = await fetch(`${process.env.GOLANG_API_URL}/events/${eventId}`, {
-    headers: {
-      "apikey": process.env.GOLANG_API_TOKEN as string,
-    },
-    cache: "no-store",
-  });
-  if (!eventRes.ok) {
+  let event: EventModel;
+  try {
+    event = await fetchJson<EventModel>(
+      `${process.env.GOLANG_API_URL}/events/${eventId}`,
+      {
+        headers: {
+          "apikey": process.env.GOLANG_API_TOKEN as string,
+        },
+        cache: "no-store",
+      }
+    );
+  } catch {
     return NextResponse.json({ message: "Evento não encontrado" }, { status: 400 });
   }
-  const event = await eventRes.json();
   let totalPrice = spots.reduce((sum: number, s: any) => sum + s.price, 0);
   if (ticketKind === "half") {
     totalPrice = totalPrice / 2;

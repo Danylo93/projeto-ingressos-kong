@@ -3,19 +3,28 @@ import { Title } from "../../components/Title";
 import { redirect } from "next/navigation";
 import { EventModel } from "../../models";
 import { CheckoutForm } from "./CheckoutForm";
+import { fetchJson } from "../../lib/api";
 
-async function getEvent(eventId: string): Promise<EventModel> {
-  const response = await fetch(`${process.env.GOLANG_API_URL}/events/${eventId}`, {
-    headers: {
-      "apikey": process.env.GOLANG_API_TOKEN as string
-    },
-    cache: "no-store",
-    next: {
-      tags: [`events/${eventId}`],
-    }
-  });
+export const dynamic = "force-dynamic";
 
-  return response.json();
+async function getEvent(eventId: string): Promise<EventModel | null> {
+  try {
+    return await fetchJson<EventModel>(
+      `${process.env.GOLANG_API_URL}/events/${eventId}`,
+      {
+        headers: {
+          "apikey": process.env.GOLANG_API_TOKEN as string,
+        },
+        cache: "no-store",
+        next: {
+          tags: [`events/${eventId}`],
+        },
+      }
+    );
+  } catch (err) {
+    console.error("Failed to load event", err);
+    return null;
+  }
 }
 
 export default async function CheckoutPage() {
@@ -27,6 +36,9 @@ export default async function CheckoutPage() {
   }
   const user = JSON.parse(userCookie);
   const event = await getEvent(eventId);
+  if (!event) {
+    return redirect("/");
+  }
   const selectedSpots = JSON.parse(cookiesStore.get("spots")?.value || "[]");
   let totalPrice = selectedSpots.reduce(
     (sum: number, s: any) => sum + s.price,

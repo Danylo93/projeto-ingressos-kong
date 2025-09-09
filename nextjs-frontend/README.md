@@ -35,6 +35,9 @@ GOLANG_API_TOKEN=changeme
 
 Utilize as chaves de teste disponibilizadas pelo [Stripe](https://stripe.com/docs/keys#test-live-modes) e cartões de teste para realizar compras.
 
+> **Erro "Unexpected token 'd', 'dial tcp'..."?**
+> Certifique-se de que a API em Go esteja rodando e que as variáveis `GOLANG_API_URL` e `GOLANG_API_TOKEN` estejam corretas. Esse problema ocorre quando a resposta do backend não está em JSON, geralmente por falta de conexão.
+
 Após subir a aplicação, acesse `http://localhost:3000` e crie uma conta com nome, e-mail, igreja, pastor, WhatsApp e senha. Somente usuários logados podem selecionar assentos; seus dados aparecem no cabeçalho e o resumo dos assentos escolhidos com o valor total é exibido no rodapé. Depois de selecionar os assentos, finalize o pagamento via Stripe.
 
 O evento de demonstração possui **3.000 assentos** divididos em `arquibancada`, `cadeira` e `vip`. Passe o mouse sobre os assentos para visualizar o número e o tipo antes de selecionar. O preço total é calculado de acordo com o tipo de assento escolhido.

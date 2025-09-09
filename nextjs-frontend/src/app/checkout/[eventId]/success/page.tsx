@@ -3,19 +3,28 @@ import { revalidateTag } from "next/cache";
 import { Title } from "../../../../components/Title";
 import { EventModel } from "../../../../models";
 import { clearSpotsAction } from "../../../../actions";
-// queries
-async function getEvent(eventId: string): Promise<EventModel> {
-  const response = await fetch(`${process.env.GOLANG_API_URL}/events/${eventId}`, {
-    headers: {
-      "apikey": process.env.GOLANG_API_TOKEN as string
-    },
-    cache: "no-store",
-    next: {
-      tags: [`events/${eventId}`],
-    }
-  });
+import { fetchJson } from "../../../../lib/api";
 
-  return response.json();
+export const dynamic = "force-dynamic";
+// queries
+async function getEvent(eventId: string): Promise<EventModel | null> {
+  try {
+    return await fetchJson<EventModel>(
+      `${process.env.GOLANG_API_URL}/events/${eventId}`,
+      {
+        headers: {
+          "apikey": process.env.GOLANG_API_TOKEN as string,
+        },
+        cache: "no-store",
+        next: {
+          tags: [`events/${eventId}`],
+        },
+      }
+    );
+  } catch (err) {
+    console.error("Failed to load event", err);
+    return null;
+  }
 }
 
 export default async function CheckoutSuccessPage({
@@ -49,6 +58,13 @@ export default async function CheckoutSuccessPage({
     await clearSpotsAction();
   }
   const event = await getEvent(params.eventId);
+  if (!event) {
+    return (
+      <main className="mt-10 flex flex-col flex-wrap items-center ">
+        <Title>Evento não encontrado</Title>
+      </main>
+    );
+  }
   return (
     <main className="mt-10 flex flex-col flex-wrap items-center ">
       <Title>Compra realizada com sucesso!</Title>
